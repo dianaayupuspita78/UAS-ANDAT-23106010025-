@@ -1,0 +1,169 @@
+#=================================================
+# UAS ANALISIS DATA KATEGORIK
+# REGRESI LOGISTIK
+#=================================================
+setwd("C:/RSstudio")
+getwd()
+# Import data
+data <- read.csv("~/SEMESTER 6/Analisis Data Kategorik/Data UAS.csv", sep = ",", dec = ",")
+View(data)
+# Mengubah variabel numerik
+data$Jarak.Rumah.Kos..km. <- as.numeric(data$Jarak.Rumah.Kos..km.)
+data$Rata.rata.Durasi.Tidur <- as.numeric(data$Rata.rata.Durasi.Tidur)
+
+# Membuat variabel respon
+data$Y <- ifelse(
+  data$Apakah.datang.tepat.waktu..minimal.80..pertemuan.tatap.muka. == "ya",
+  1, 0)
+
+#=================================================
+# MODEL REGRESI LOGISTIK
+#=================================================
+
+model <- glm(
+  Y ~ Jarak.Rumah.Kos..km. +
+    Rata.rata.Waktu.Tempuh..menit. +
+    Rata.rata.Durasi.Tidur,
+  family = binomial(link = "logit"),
+  data = data
+)
+
+# Ringkasan model
+summary(model)
+
+#=================================================
+# ODDS RATIO
+#=================================================
+
+exp(coef(model))
+
+#=================================================
+# PROBABILITAS PREDIKSI
+#=================================================
+
+data$Prob <- predict(model,
+                     type = "response")
+
+head(data$Prob)
+
+#=================================================
+# PLOT REGRESI LOGISTIK
+#=================================================
+#Jarak rumah
+library(ggplot2)
+
+x1 <- seq(min(data$Jarak.Rumah.Kos..km.),
+          max(data$Jarak.Rumah.Kos..km.),
+          length.out = 100)
+
+plot1 <- data.frame(
+  Jarak.Rumah.Kos..km. = x1,
+  Rata.rata.Waktu.Tempuh..menit. =
+    mean(data$Rata.rata.Waktu.Tempuh..menit.),
+  Rata.rata.Durasi.Tidur =
+    mean(data$Rata.rata.Durasi.Tidur)
+)
+
+plot1$Prob <- predict(model,
+                      newdata = plot1,
+                      type = "response")
+
+ggplot() +
+  geom_point(
+    data = data,
+    aes(x = Jarak.Rumah.Kos..km.,
+        y = Y),
+    color = "blue",
+    size = 3
+  ) +
+  geom_line(
+    data = plot1,
+    aes(x = Jarak.Rumah.Kos..km.,
+        y = Prob),
+    color = "red",
+    linewidth = 1.2
+  ) +
+  labs(
+    title = "Kurva Regresi Logistik Jarak Rumah/Kos",
+    x = "Jarak Rumah/Kos (km)",
+    y = "Probabilitas Tepat Waktu"
+  ) +
+  theme_minimal()
+
+#waktu tempuh
+x2 <- seq(min(data$Rata.rata.Waktu.Tempuh..menit.),
+          max(data$Rata.rata.Waktu.Tempuh..menit.),
+          length.out = 100)
+
+plot2 <- data.frame(
+  Jarak.Rumah.Kos..km. =
+    mean(data$Jarak.Rumah.Kos..km.),
+  Rata.rata.Waktu.Tempuh..menit. = x2,
+  Rata.rata.Durasi.Tidur =
+    mean(data$Rata.rata.Durasi.Tidur)
+)
+
+plot2$Prob <- predict(model,
+                      newdata = plot2,
+                      type = "response")
+
+ggplot() +
+  geom_point(
+    data = data,
+    aes(x = Rata.rata.Waktu.Tempuh..menit.,
+        y = Y),
+    color = "blue",
+    size = 3
+  ) +
+  geom_line(
+    data = plot2,
+    aes(x = Rata.rata.Waktu.Tempuh..menit.,
+        y = Prob),
+    color = "red",
+    linewidth = 1.2
+  ) +
+  labs(
+    title = "Kurva Regresi Logistik Waktu Tempuh",
+    x = "Waktu Tempuh (menit)",
+    y = "Probabilitas Tepat Waktu"
+  ) +
+  theme_minimal()
+
+#durasi tidur
+x3 <- seq(min(data$Rata.rata.Durasi.Tidur),
+          max(data$Rata.rata.Durasi.Tidur),
+          length.out = 100)
+
+plot3 <- data.frame(
+  Jarak.Rumah.Kos..km. =
+    mean(data$Jarak.Rumah.Kos..km.),
+  Rata.rata.Waktu.Tempuh..menit. =
+    mean(data$Rata.rata.Waktu.Tempuh..menit.),
+  Rata.rata.Durasi.Tidur = x3
+)
+
+plot3$Prob <- predict(model,
+                      newdata = plot3,
+                      type = "response")
+
+ggplot() +
+  geom_point(
+    data = data,
+    aes(x = Rata.rata.Durasi.Tidur,
+        y = Y),
+    color = "blue",
+    size = 3
+  ) +
+  geom_line(
+    data = plot3,
+    aes(x = Rata.rata.Durasi.Tidur,
+        y = Prob),
+    color = "red",
+    linewidth = 1.2
+  ) +
+  labs(
+    title = "Kurva Regresi Logistik Durasi Tidur",
+    x = "Durasi Tidur (jam)",
+    y = "Probabilitas Tepat Waktu"
+  ) +
+  theme_minimal()
